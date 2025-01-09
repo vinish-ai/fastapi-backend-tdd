@@ -60,3 +60,11 @@ async def update_book(db: db_dependency, book_request: BookRequest, book_id: int
 
     db.add(book_model)
     db.commit()
+
+@app.delete('/book/{book_id}', status_code=status.HTTP_204_NO_CONTENT)
+async def delete_book(db: db_dependency, book_id: int = Path(gt=0)):
+    book_model = db.query(Books).filter(Books.id == book_id).first()
+    if book_model is None:
+        raise HTTPException(status_code=404, detail="Book Not Found")
+    db.query(Books).filter(Books.id == book_id).delete()
+    db.commit()
