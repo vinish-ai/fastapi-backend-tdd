@@ -45,3 +45,18 @@ async def create_book(db: db_dependency, book_request: BookRequest):
 
     db.add(book_model)
     db.commit()
+
+@app.put('/book/{book_id}', status_code=status.HTTP_204_NO_CONTENT)
+async def update_book(db: db_dependency, book_request: BookRequest, book_id: int = Path(gt=0)):
+    book_model = db.query(Books).filter(Books.id == book_id).first()
+    if book_model is None:
+        raise HTTPException(status_code=404, detail="Book Not Found")
+    
+    book_model.title = book_request.title
+    book_model.author = book_request.author
+    book_model.description = book_request.description
+    book_model.published_date =  book_request.published_date
+    book_model.verified = False
+
+    db.add(book_model)
+    db.commit()
