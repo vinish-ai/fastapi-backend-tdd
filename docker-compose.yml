@@ -20,9 +20,9 @@ services:
     env_file:
       - ./.env
     ports:
-      - "6432:5432"
+      - "5432:5432"
     volumes:
-      - ./scripts:/docker-entrypoint-initdb.d
+      - ./scripts/db-setup:/docker-entrypoint-initdb.d
 
   adminer:
     image: adminer
