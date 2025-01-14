@@ -19,8 +19,22 @@ router = APIRouter(
 SECRET_KEY = os.getenv('JWT_SECRET_KEY')
 ALGORITHM = os.getenv('JWT_ALGORITHM')
 
+bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl='auth/token')
+
 db_dependency = Annotated[Session, Depends(get_db)]
-user_dependency = Annotated[OAuth2PasswordRequestForm, Depends()]
+
+class CreateUserRequest(BaseModel):
+    username : str
+    email: str
+    first_name: str
+    last_name: str
+    password: str
+    role: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
 def authenticate_user(username: str, password: str, db):
     user = db.query(Users).filter(Users.username == username).first()
@@ -35,22 +49,6 @@ def create_access_token(username: str, user_id: int, expires_delta: timedelta):
     expires = datetime.now(timezone.utc) + expires_delta
     encode.update({'exp': expires})
     jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
-
-bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
-oauth2_bearer = OAuth2PasswordBearer(tokenUrl='auth/token')
-
-class CreateUserRequest(BaseModel):
-    username : str
-    email: str
-    first_name: str
-    last_name: str
-    password: str
-    role: str
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
 
 @router.post('/create_user', status_code=status.HTTP_201_CREATED)
 async def create_user(db: db_dependency,
@@ -69,7 +67,7 @@ async def create_user(db: db_dependency,
     db.commit()
 
 @router.post('/token', response_model=Token)
-async def login_for_access_token(form_data: user_dependency, db: db_dependency):
+async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency):
     user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user')
