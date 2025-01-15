@@ -25,4 +25,4 @@ class Books(Base):
     verified = Column(Boolean, default=False)
     vector_indexed = Column(Boolean, default=False)
     visibility = Column(String)
-    owner = Column(Integer, ForeignKey("users.id"))
+    owner_id = Column(Integer, ForeignKey("users.id"))
